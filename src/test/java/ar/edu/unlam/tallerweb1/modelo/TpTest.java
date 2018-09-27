@@ -114,4 +114,89 @@ public class TpTest extends SpringTest {
 		assertThat(paises.get(0).getNombre());
 		assertThat(paises.get(0).getIdioma());
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	@Transactional
+	@Rollback
+	public void testQueBusqueTodosLosPaisesCuyaCapitalEstanAlNorteDelTropicoDeCancer() {
+		ubicacion.setLatitud(24D);
+		ubicacionDos.setLatitud(37D);
+		ubicacionTres.setLatitud(80D);
+		
+		ciudad.setUbicacionGeografica(ubicacion);
+		ciudadDos.setUbicacionGeografica(ubicacionDos);
+		ciudadTres.setUbicacionGeografica(ubicacionTres);
+		
+		pais.setNombre("Egipto");
+		paisDos.setNombre("Canada");
+		paisTres.setNombre("Inglaterra");
+		
+		pais.setCapital(ciudad);
+		paisDos.setCapital(ciudadDos);
+		paisTres.setCapital(ciudadTres);
+		
+		sesion.save(pais);
+		sesion.save(paisDos);
+		sesion.save(paisTres);
+		
+		//--- 3.Buscar todos los paises cuya capital esta al norte del tropico de cancer ---//
+		
+		paises = sesion.createCriteria(Pais.class)
+				.createAlias("capital", "cap")
+				.createAlias("cap.ubicacionGeografica", "ubi")
+				.add(Restrictions.gt("ubi.latitud", 24D))
+				.list();
+		
+		assertThat(paises).hasSize(2);
+		assertThat(paises).isNotEmpty();
+		assertThat(paises).isNotNull();
+		assertThat(paises.get(0).getNombre()).isEqualTo("Canada");
+		assertThat(paises.get(1).getNombre()).isEqualTo("Inglaterra");
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	@Transactional
+	@Rollback
+	public void testQueBusqueTodasLasCiudadesDelHemisferioSur() {
+		pais.setNombre("Argentina");
+		paisDos.setNombre("Chile");
+		paisTres.setNombre("Estados Unidos");
+		
+		ciudad.setNombre("La Boca");
+		ciudadDos.setNombre("Temuco");
+		ciudadTres.setNombre("New York");
+		
+		ubicacion.setLatitud(-41D);
+		ubicacionDos.setLatitud(-38D);
+		ubicacionTres.setLatitud(40D);
+		
+		ciudad.setPais(pais);
+		ciudadDos.setPais(paisDos);
+		ciudadTres.setPais(paisTres);
+		
+		ciudad.setUbicacionGeografica(ubicacion);
+		ciudadDos.setUbicacionGeografica(ubicacionDos);
+		ciudadTres.setUbicacionGeografica(ubicacionTres);
+		
+		sesion.save(ciudad);
+		sesion.save(ciudadDos);
+		sesion.save(ciudadTres);
+		
+		//--- 4.Buscar todas las ciudades del hemisferio sur ---//
+		
+		ciudades = sesion.createCriteria(Ciudad.class)
+				.createAlias("ubicacionGeografica", "ubi")
+				.add(Restrictions.lt("ubi.latitud", 0D))
+				.list();
+		
+		assertThat(ciudades).hasSize(2);
+		assertThat(ciudades).isNotEmpty();
+		assertThat(ciudades).isNotNull();
+		assertThat(ciudades.get(0).getNombre()).isEqualTo("La Boca");
+		assertThat(ciudades.get(1).getNombre()).isEqualTo("Temuco");
+		
+		
+	}
 }
